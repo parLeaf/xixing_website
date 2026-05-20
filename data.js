@@ -1581,3 +1581,28 @@ var linZexuRouteData =[
             }
 
 ];
+// ========== 辅助函数 ==========
+function isMeaningfulValue(val) {
+  return val && val !== "未提及" && val !== "";
+}
+
+function getRouteMonths() {
+  const monthsSet = new Set();
+  linZexuRouteData.forEach(p => {
+    const match = p.date.match(/[一二三四五六七八九十]+月/);
+    if (match) monthsSet.add(match[0]);
+  });
+  return Array.from(monthsSet);
+}
+
+// 类别颜色映射（供其他页面使用）
+const categoryColors = {
+  "起点": "#DC143C",
+  "终点": "#228B22",
+  "重要城市": "#FF6347",
+  "重要驿站": "#DAA520",
+  "重要地标": "#4682B4",
+  "名胜古迹": "#9370DB",
+  "驿站": "#CD853F",
+  "途经": "#A0522D"
+};

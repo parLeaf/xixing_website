@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>时间线 · 西行数字史馆</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div id="navbar-container"></div>
+
+  <div class="timeline-header">
+    <h1><i class="fas fa-timeline"></i> 西行时间线</h1>
+    <p>按月份筛选，点击卡片展开详细记载</p>
+  </div>
+
+  <div class="timeline-filters" id="timeline-filters"></div>
+  <div id="timeline-list" class="timeline-list"></div>
+
+  <footer class="footer">
+    <p>数据来源：《林则徐日记》1842年壬寅 | 西行数字史馆</p>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="common.js"></script>
+  <script>
+    insertNavbar('timeline');
+
+    let currentMonthFilter = '全部';
+    const months = ['全部', ...getRouteMonths()];
+
+    // 渲染月份筛选按钮
+    function renderFilters() {
+      const container = document.getElementById('timeline-filters');
+      container.innerHTML = months.map(month => `
+        <button class="filter-btn ${month === currentMonthFilter ? 'active' : ''}" data-month="${month}">
+          ${month}
+        </button>
+      `).join('');
+      
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          currentMonthFilter = btn.getAttribute('data-month');
+          renderFilters();      // 更新按钮样式
+          renderTimeline();     // 重新渲染列表
+        });
+      });
+    }
+
+    // 渲染时间线列表
+    function renderTimeline() {
+      const filtered = currentMonthFilter === '全部' 
+        ? linZexuRouteData 
+        : linZexuRouteData.filter(p => p.date.includes(currentMonthFilter));
+      
+      const container = document.getElementById('timeline-list');
+      container.innerHTML = '';
+
+      filtered.forEach((point, idx) => {
+        const catColor = categoryColors[point.category] || '#8B4513';
+        const card = document.createElement('div');
+        card.className = 'timeline-card';
+        card.innerHTML = `
+          <div class="timeline-card-header" data-idx="${idx}">
+            <span class="date-badge" style="background-color: ${catColor}">${point.date}</span>
+            <h3>${point.name}</h3>
+            <i class="fas fa-chevron-down expand-icon"></i>
+          </div>
+          <div class="timeline-card-body" style="display: none;">
+            <p class="desc">${point.desc}</p>
+            ${isMeaningfulValue(point.originalPlace) ? `<div><i class="fas fa-map-pin"></i> <strong>古地名：</strong> ${point.originalPlace}</div>` : ''}
+            ${isMeaningfulValue(point.modernPlace) ? `<div><i class="fas fa-location-dot"></i> <strong>今地名：</strong> ${point.modernPlace}</div>` : ''}
+            ${isMeaningfulValue(point.characters) ? `<div><i class="fas fa-users"></i> <strong>人物：</strong> ${point.characters}</div>` : ''}
+            ${isMeaningfulValue(point.products) ? `<div><i class="fas fa-apple-alt"></i> <strong>物产：</strong> ${point.products}</div>` : ''}
+            ${isMeaningfulValue(point.food) ? `<div><i class="fas fa-utensils"></i> <strong>饮食：</strong> ${point.food}</div>` : ''}
+            ${isMeaningfulValue(point.emotion) ? `<div><i class="fas fa-heart"></i> <strong>情感：</strong> ${point.emotion}</div>` : ''}
+            ${isMeaningfulValue(point.localRecords) ? `<div><i class="fas fa-book"></i> <strong>地方志：</strong> ${point.localRecords}</div>` : ''}
+          </div>
+        `;
+        
+        const header = card.querySelector('.timeline-card-header');
+        const body = card.querySelector('.timeline-card-body');
+        const icon = header.querySelector('.expand-icon');
+        
+        header.addEventListener('click', () => {
+          const isOpen = body.style.display === 'block';
+          body.style.display = isOpen ? 'none' : 'block';
+          icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+        });
+        
+        container.appendChild(card);
+      });
+    }
+
+    renderFilters();
+    renderTimeline();
+  </script>
+</body>
+</html>

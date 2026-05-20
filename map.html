@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>地图 · 西行数字史馆</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="navbar-container"></div>
+  <div id="map"></div>
+
+  <!-- 左上角时间控制卡片 -->
+  <div id="timeline-card" class="timeline-card-panel">
+    <div class="card-header">
+      <i class="fas fa-route"></i> 林则徐西行时间轴
+      <span id="progress-count">0/0</span>
+    </div>
+    <input type="range" id="timeline-slider" class="timeline-slider" min="0" max="0" value="0" step="1">
+    <div class="month-marks" id="month-marks"></div>
+    <div class="current-point-info" id="current-point-info">—</div>
+    <div class="play-controls">
+      <button id="btn-start"><i class="fas fa-step-backward"></i> 起点</button>
+      <button id="btn-play"><i class="fas fa-play"></i> 播放</button>
+      <button id="btn-end"><i class="fas fa-step-forward"></i> 终点</button>
+    </div>
+    <div class="hint-text">拖动滑块或点击月份节点 | 播放模式自动推进</div>
+  </div>
+
+  <!-- 右上角操作面板 -->
+  <div class="action-panel">
+    <button id="toggle-markers" class="action-btn"><i class="fas fa-map-marker-alt"></i> 隐藏标记点</button>
+    <button id="toggle-route" class="action-btn"><i class="fas fa-route"></i> 隐藏路线</button>
+    <button id="reset-view" class="action-btn"><i class="fas fa-globe-asia"></i> 重置视图</button>
+    <button id="export-btn" class="action-btn"><i class="fas fa-download"></i> 导出CSV</button>
+  </div>
+
+  <!-- 右下角统计与详情面板 -->
+  <div id="stats-panel" class="stats-panel">
+    <div class="stats-header"><i class="fas fa-chart-bar"></i> 行程统计 & 当前地点</div>
+    <div id="stats-content">加载中...</div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="data.js"></script>
+  <script src="common.js"></script>
+  <script src="map.js"></script>
+  <script>
+    // 插入导航栏，并标示当前页面为地图页
+    insertNavbar('map');
+  </script>
+</body>
+</html>
