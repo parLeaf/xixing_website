@@ -6,13 +6,19 @@
   <title>时间线 · 西行数字史馆</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <div id="navbar-container"></div>
 
   <div class="timeline-header">
     <h1><i class="fas fa-timeline"></i> 西行时间线</h1>
-    <p>按月份筛选，点击卡片展开详细记载</p>
+    <p>按月筛选，图表点击可联动 | 点击卡片展开详情</p>
+  </div>
+
+  <!-- 图表容器 -->
+  <div class="timeline-chart-container">
+    <canvas id="monthChart" width="400" height="200" style="max-width:100%; height:auto;"></canvas>
   </div>
 
   <div class="timeline-filters" id="timeline-filters"></div>
@@ -24,11 +30,92 @@
 
   <script src="data.js"></script>
   <script src="common.js"></script>
+  <script src="terms.js"></script>
   <script>
+    // 确保高亮函数可用
+    if (typeof highlightTerms === 'undefined') {
+      // 如果 common.js 未提供，则定义简易版本
+      window.highlightTerms = function(text) {
+        if (!text || text === "未提及") return text;
+        let result = text;
+        if (window.termDict) {
+          window.termDict.forEach(term => {
+            const regex = new RegExp(`(${term.word})`, 'g');
+            result = result.replace(regex, `<span class="term-highlight" data-term="${term.word}">$1</span>`);
+          });
+        }
+        return result;
+      };
+    }
+    if (typeof bindTermClick === 'undefined') {
+      window.bindTermClick = function() {
+        document.querySelectorAll('.term-highlight').forEach(el => {
+          el.removeEventListener('click', termClickHandler);
+          el.addEventListener('click', termClickHandler);
+        });
+      };
+      function termClickHandler(e) {
+        e.stopPropagation();
+        const word = e.currentTarget.getAttribute('data-term');
+        const def = window.termDict?.find(t => t.word === word)?.definition || "暂无释义";
+        alert(`【${word}】\n${def}`);
+      }
+    }
+
     insertNavbar('timeline');
 
     let currentMonthFilter = '全部';
     const months = ['全部', ...getRouteMonths()];
+
+    // 获取每月统计
+    function getMonthStats() {
+      const monthCount = {};
+      linZexuRouteData.forEach(p => {
+        const m = p.date.match(/[一二三四五六七八九十]+月/)?.[0] || '未知';
+        monthCount[m] = (monthCount[m] || 0) + 1;
+      });
+      return monthCount;
+    }
+
+    let chartInstance = null;
+    function drawChart() {
+      const stats = getMonthStats();
+      const labels = Object.keys(stats).sort((a,b) => {
+        const num = s => parseInt(s.replace('月',''));
+        return num(a) - num(b);
+      });
+      const data = labels.map(l => stats[l]);
+      const ctx = document.getElementById('monthChart').getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: { 
+          labels, 
+          datasets: [{ 
+            label: '途经地点数量', 
+            data, 
+            backgroundColor: '#d45a3b',
+            borderRadius: 8
+          }] 
+        },
+        options: {
+          onClick: (e, activeEls) => {
+            if(activeEls.length) {
+              const month = labels[activeEls[0].index];
+              currentMonthFilter = month;
+              renderFilters();
+              renderTimeline();
+            }
+          },
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            tooltip: { callbacks: { label: (ctx) => `${ctx.raw} 个地点` } },
+            legend: { position: 'top' }
+          }
+        }
+      });
+    }
 
     // 渲染月份筛选按钮
     function renderFilters() {
@@ -42,13 +129,13 @@
       document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           currentMonthFilter = btn.getAttribute('data-month');
-          renderFilters();      // 更新按钮样式
-          renderTimeline();     // 重新渲染列表
+          renderFilters();
+          renderTimeline();
         });
       });
     }
 
-    // 渲染时间线列表
+    // 渲染时间线列表（竖线时间轴样式，卡片左右交替）
     function renderTimeline() {
       const filtered = currentMonthFilter === '全部' 
         ? linZexuRouteData 
@@ -59,23 +146,37 @@
 
       filtered.forEach((point, idx) => {
         const catColor = categoryColors[point.category] || '#8B4513';
+        // 高亮处理各字段
+        const descHtml = highlightTerms(point.desc);
+        const originalPlaceHtml = highlightTerms(point.originalPlace);
+        const modernPlaceHtml = highlightTerms(point.modernPlace);
+        const charactersHtml = highlightTerms(point.characters);
+        const productsHtml = highlightTerms(point.products);
+        const foodHtml = highlightTerms(point.food);
+        const emotionHtml = highlightTerms(point.emotion);
+        const localRecordsHtml = highlightTerms(point.localRecords);
+        
         const card = document.createElement('div');
         card.className = 'timeline-card';
+        // 根据索引奇偶性添加左右偏移类（可选，CSS中控制）
+        if (idx % 2 === 0) card.classList.add('timeline-card-left');
+        else card.classList.add('timeline-card-right');
+        
         card.innerHTML = `
           <div class="timeline-card-header" data-idx="${idx}">
-            <span class="date-badge" style="background-color: ${catColor}">${point.date}</span>
+            <div class="timeline-date" style="border-left-color: ${catColor};">${point.date}</div>
             <h3>${point.name}</h3>
             <i class="fas fa-chevron-down expand-icon"></i>
           </div>
           <div class="timeline-card-body" style="display: none;">
-            <p class="desc">${point.desc}</p>
-            ${isMeaningfulValue(point.originalPlace) ? `<div><i class="fas fa-map-pin"></i> <strong>古地名：</strong> ${point.originalPlace}</div>` : ''}
-            ${isMeaningfulValue(point.modernPlace) ? `<div><i class="fas fa-location-dot"></i> <strong>今地名：</strong> ${point.modernPlace}</div>` : ''}
-            ${isMeaningfulValue(point.characters) ? `<div><i class="fas fa-users"></i> <strong>人物：</strong> ${point.characters}</div>` : ''}
-            ${isMeaningfulValue(point.products) ? `<div><i class="fas fa-apple-alt"></i> <strong>物产：</strong> ${point.products}</div>` : ''}
-            ${isMeaningfulValue(point.food) ? `<div><i class="fas fa-utensils"></i> <strong>饮食：</strong> ${point.food}</div>` : ''}
-            ${isMeaningfulValue(point.emotion) ? `<div><i class="fas fa-heart"></i> <strong>情感：</strong> ${point.emotion}</div>` : ''}
-            ${isMeaningfulValue(point.localRecords) ? `<div><i class="fas fa-book"></i> <strong>地方志：</strong> ${point.localRecords}</div>` : ''}
+            <div class="timeline-desc"><i class="fas fa-quote-left"></i> ${descHtml}</div>
+            ${point.originalPlace && point.originalPlace !== "未提及" ? `<div><i class="fas fa-map-pin"></i> <strong>古地名：</strong> ${originalPlaceHtml}</div>` : ''}
+            ${point.modernPlace && point.modernPlace !== "未提及" ? `<div><i class="fas fa-location-dot"></i> <strong>今地名：</strong> ${modernPlaceHtml}</div>` : ''}
+            ${point.characters && point.characters !== "未提及" ? `<div><i class="fas fa-users"></i> <strong>人物：</strong> ${charactersHtml}</div>` : ''}
+            ${point.products && point.products !== "未提及" ? `<div><i class="fas fa-apple-alt"></i> <strong>物产：</strong> ${productsHtml}</div>` : ''}
+            ${point.food && point.food !== "未提及" ? `<div><i class="fas fa-utensils"></i> <strong>饮食：</strong> ${foodHtml}</div>` : ''}
+            ${point.emotion && point.emotion !== "未提及" ? `<div><i class="fas fa-heart"></i> <strong>情感：</strong> ${emotionHtml}</div>` : ''}
+            ${point.localRecords && point.localRecords !== "未提及" ? `<div><i class="fas fa-book"></i> <strong>地方志：</strong> ${localRecordsHtml}</div>` : ''}
           </div>
         `;
         
@@ -87,12 +188,18 @@
           const isOpen = body.style.display === 'block';
           body.style.display = isOpen ? 'none' : 'block';
           icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+          if (!isOpen) bindTermClick(); // 展开后绑定术语高亮事件
         });
         
         container.appendChild(card);
       });
+      
+      // 绑定所有术语高亮点击事件
+      bindTermClick();
     }
 
+    // 初始化图表和列表
+    drawChart();
     renderFilters();
     renderTimeline();
   </script>

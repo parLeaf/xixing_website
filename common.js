@@ -29,3 +29,27 @@ window.getRouteMonths = getRouteMonths;
 window.categoryColors = categoryColors;
 window.renderNavbar = renderNavbar;
 window.insertNavbar = insertNavbar;
+
+// common.js 末尾追加
+function highlightTerms(text) {
+  if (!text || text === "未提及") return text;
+  let result = text;
+  (window.termDict || []).forEach(term => {
+    const regex = new RegExp(`(${term.word})`, 'g');
+    result = result.replace(regex, `<span class="term-highlight" data-term="${term.word}">$1</span>`);
+  });
+  return result;
+}
+
+function bindTermClick() {
+  document.querySelectorAll('.term-highlight').forEach(el => {
+    el.removeEventListener('click', termClickHandler);
+    el.addEventListener('click', termClickHandler);
+  });
+}
+function termClickHandler(e) {
+  e.stopPropagation();
+  const word = e.currentTarget.getAttribute('data-term');
+  const def = window.termDict.find(t => t.word === word)?.definition || "暂无释义";
+  alert(`【${word}】\n${def}`);  // 可替换为更美观的浮动提示
+}
