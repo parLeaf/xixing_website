@@ -315,3 +315,101 @@ h1, h2, h3, h4 { font-weight: var(--font-weight-medium); line-height: 1.5; }
   box-shadow: var(--shadow-card);
 }
 .leaflet-popup-tip { background: var(--color-paper); }
+/* ========== 图例样式 ========== */
+.map-legend {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 10px 15px;
+    min-width: 160px;
+    box-shadow: var(--shadow-card);
+    font-size: 0.8rem;
+    pointer-events: auto;
+}
+.legend-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    color: var(--primary);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 4px;
+}
+.legend-items {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.legend-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.legend-label {
+    color: var(--foreground);
+}
+
+/* ========== 类别筛选面板样式 ========== */
+.category-filter {
+    position: absolute;
+    top: 260px;   /* 原来 80px，改为 260px 避免重叠 */
+    right: 20px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 12px;
+    width: 160px;  /* 与操作面板宽度一致 */
+    box-shadow: var(--shadow-card);
+    font-size: 0.85rem;
+}
+.filter-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-align: center;
+    color: var(--primary);
+}
+.filter-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+.filter-btn-cat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--muted);
+    border: none;
+    border-radius: 20px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.8rem;
+    width: 100%;
+}
+.filter-btn-cat:hover {
+    background: #ddd;
+}
+.filter-btn-cat.active {
+    background: var(--destructive);
+    color: white;
+}
+.filter-color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
