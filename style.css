@@ -362,7 +362,7 @@ h1, h2, h3, h4 { font-weight: var(--font-weight-medium); line-height: 1.5; }
 /* ========== 类别筛选面板样式 ========== */
 .category-filter {
     position: absolute;
-    top: 260px;   /* 原来 80px，改为 260px 避免重叠 */
+    top: 255px;   /* 原来 80px，改为 260px 避免重叠 */
     right: 20px;
     z-index: 1000;
     background: rgba(255, 255, 255, 0.95);
